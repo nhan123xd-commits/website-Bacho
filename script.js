@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initAppFeatures();
     }).catch(err => console.error("Error loading header/footer. Are you running on a local server?", err));
 
-    // === 3. Canvas Background (CẬP NHẬT: Hiệu ứng đẹp hơn, màu Đỏ/Vàng) ===
+   // === 3. Canvas Background (Hiệu ứng Ngôi sao vàng bay lơ lửng) ===
     const canvas = document.getElementById('bg-canvas');
     if(canvas) {
         const ctx = canvas.getContext('2d');
@@ -31,61 +31,76 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('resize', resize);
         resize();
 
-        // Lấy màu từ CSS variables để đồng bộ
-        const redColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
-        const goldColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+        // Lấy màu vàng sao từ CSS
+        const goldColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ffd700';
 
-        class Particle {
+        // Hàm vẽ ngôi sao 5 cánh
+        function drawStar(cx, cy, spikes, outerRadius, innerRadius, color, rotation, opacity) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot + rotation) * outerRadius;
+                y = cy + Math.sin(rot + rotation) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot + rotation) * innerRadius;
+                y = cy + Math.sin(rot + rotation) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            
+            ctx.globalAlpha = opacity; // Áp dụng độ mờ
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.globalAlpha = 1; // Khôi phục lại
+        }
+
+        class Star {
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 3 + 1; // Kích thước hạt
-                this.speedX = (Math.random() - 0.5) * 0.5; // Tốc độ ngang nhẹ
-                this.speedY = Math.random() * 0.8 + 0.2; // Tốc độ rơi nhẹ
-                
-                // Ngẫu nhiên chọn màu đỏ hoặc vàng
-                this.color = Math.random() > 0.5 ? redColor : goldColor;
-                this.opacity = Math.random() * 0.4 + 0.1; // Độ mờ ngẫu nhiên
+                this.size = Math.random() * 8 + 4; // Kích thước sao to nhỏ ngẫu nhiên
+                this.speedX = (Math.random() - 0.5) * 0.4; // Trôi ngang nhẹ nhàng
+                this.speedY = Math.random() * -0.6 - 0.2; // Bay ngược từ dưới lên trên
+                this.rotation = Math.random() * Math.PI * 2; // Góc xoay ban đầu
+                this.rotationSpeed = (Math.random() - 0.5) * 0.03; // Tốc độ xoay
+                this.opacity = Math.random() * 0.5 + 0.1; // Độ sáng tối ngẫu nhiên
             }
             update() {
                 this.y += this.speedY;
                 this.x += this.speedX;
+                this.rotation += this.rotationSpeed;
                 
-                // Nếu rơi hết màn hình, quay lại đỉnh
-                if (this.y > canvas.height) { 
-                    this.y = -10; 
+                // Nếu ngôi sao bay khuất lên mép trên, cho nó xuất hiện lại ở dưới cùng
+                if (this.y < -20) { 
+                    this.y = canvas.height + 20; 
                     this.x = Math.random() * canvas.width; 
-                }
-                
-                // Giữ hạt trong biên ngang
-                if (this.x > canvas.width || this.x < 0) {
-                    this.speedX = -this.speedX;
                 }
             }
             draw() {
-                ctx.globalAlpha = this.opacity; // Thiết lập độ mờ
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                // Vẽ hình tròn
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalAlpha = 1; // Reset độ mờ
+                drawStar(this.x, this.y, 5, this.size, this.size / 2.5, goldColor, this.rotation, this.opacity);
             }
         }
 
-        // Tạo 80 hạt trôi nổi
-        for (let i = 0; i < 80; i++) particles.push(new Particle());
+        // Tạo 45 ngôi sao vàng lơ lửng
+        for (let i = 0; i < 45; i++) particles.push(new Star());
 
         function animate() {
+            // Xóa canvas mỗi frame
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animate);
         }
         animate();
     }
-});
-
-function initAppFeatures() {
     // 4. Dark Mode Toggle
     const themeToggle = document.getElementById('theme-toggle');
     const currentTheme = localStorage.getItem('theme') || 'light';
