@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initAppFeatures();
     }).catch(err => console.error("Error loading header/footer. Are you running on a local server?", err));
 
-   // === 3. Canvas Background (Hiệu ứng Ngôi sao vàng bay lơ lửng) ===
+    // === 3. Canvas Background (Hiệu ứng Ngôi sao vàng bay lơ lửng) ===
     const canvas = document.getElementById('bg-canvas');
     if(canvas) {
         const ctx = canvas.getContext('2d');
@@ -101,19 +101,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         animate();
     }
+});
+
+function initAppFeatures() {
     // 4. Dark Mode Toggle
     const themeToggle = document.getElementById('theme-toggle');
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    updateThemeIcon(themeToggle, currentTheme);
+    if (themeToggle) {
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(themeToggle, currentTheme);
 
-    themeToggle.addEventListener('click', () => {
-        let theme = document.documentElement.getAttribute('data-theme');
-        let newTheme = theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon(themeToggle, newTheme);
-    });
+        themeToggle.addEventListener('click', () => {
+            let theme = document.documentElement.getAttribute('data-theme');
+            let newTheme = theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(themeToggle, newTheme);
+        });
+    }
 
     function updateThemeIcon(btn, theme) {
         btn.textContent = theme === 'dark' ? '☀️' : '🌓';
@@ -138,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPage = window.location.pathname.split("/").pop() || 'index.html';
     const navLinks = document.querySelectorAll('.nav-links a');
     navLinks.forEach(link => {
-        if (link.getAttribute('href') === currentPage) {
+        if (link.getAttribute('href') === currentPage || (currentPage === '' && link.getAttribute('href') === 'index.html')) {
             link.classList.add('active');
         }
     });
@@ -149,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lightbox.innerHTML = `<span id="lightbox-close">&times;</span><img src="" alt="Zoomed Image">`;
     document.body.appendChild(lightbox);
     
-    const images = document.querySelectorAll('.gallery-img, .milestone-img'); // Thêm milestone-img vào lightbox
+    const images = document.querySelectorAll('.gallery-img, .milestone-img'); // Hỗ trợ cả trang cột mốc
     const lightboxImg = lightbox.querySelector('img');
     
     images.forEach(img => {
@@ -165,20 +170,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 8. Search Functionality (Lọc các thẻ và đoạn văn)
     const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        
-        // Lọc trong các đoạn văn của .content-section
-        document.querySelectorAll('.content-section p').forEach(p => {
-            p.style.display = p.textContent.toLowerCase().includes(term) ? 'block' : 'none';
-        });
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            
+            // Lọc trong các đoạn văn của .content-section
+            document.querySelectorAll('.content-section p').forEach(p => {
+                p.style.display = p.textContent.toLowerCase().includes(term) ? 'block' : 'none';
+            });
 
-        // Lọc các thẻ cột mốc trên trang cotmoc.html
-        document.querySelectorAll('.milestone-card').forEach(card => {
-            const text = card.textContent.toLowerCase();
-            card.style.display = text.includes(term) ? 'block' : 'none';
+            // Lọc các thẻ cột mốc trên trang cotmoc.html
+            document.querySelectorAll('.milestone-card').forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(term) ? 'block' : 'none';
+            });
         });
-    });
+    }
 
     // 9. Typing Effect (for Index page only)
     const typingElement = document.getElementById('typing-text');
