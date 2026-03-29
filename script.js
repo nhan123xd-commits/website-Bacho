@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initAppFeatures();
     }).catch(err => console.error("Error loading header/footer. Are you running on a local server?", err));
 
-    // === 3. Canvas Background (Hiệu ứng Ngôi sao vàng bay lơ lửng) ===
+    // === 3. Canvas Background (Ngôi sao vàng bay & PHÁT SÁNG TRONG DARK MODE) ===
     const canvas = document.getElementById('bg-canvas');
     if(canvas) {
         const ctx = canvas.getContext('2d');
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Lấy màu vàng sao từ CSS
         const goldColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ffd700';
 
-        // Hàm vẽ ngôi sao 5 cánh
+        // Hàm vẽ ngôi sao 5 cánh có tích hợp hiệu ứng Glow
         function drawStar(cx, cy, spikes, outerRadius, innerRadius, color, rotation, opacity) {
             let rot = Math.PI / 2 * 3;
             let x = cx;
@@ -57,29 +57,41 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.lineTo(cx, cy - outerRadius);
             ctx.closePath();
             
-            ctx.globalAlpha = opacity; // Áp dụng độ mờ
+            ctx.globalAlpha = opacity; 
+            
+            // TÍNH NĂNG PHÁT SÁNG (GLOW EFFECT) DÀNH CHO DARK MODE
+            const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDarkMode) {
+                ctx.shadowBlur = 15; // Độ tỏa sáng
+                ctx.shadowColor = color; // Màu của hào quang
+            } else {
+                ctx.shadowBlur = 0; // Tắt phát sáng ở Light Mode để tránh bị lem màu
+            }
+
             ctx.fillStyle = color;
             ctx.fill();
-            ctx.globalAlpha = 1; // Khôi phục lại
+            
+            // Reset lại để dọn dẹp context
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1; 
         }
 
         class Star {
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 8 + 4; // Kích thước sao to nhỏ ngẫu nhiên
-                this.speedX = (Math.random() - 0.5) * 0.4; // Trôi ngang nhẹ nhàng
-                this.speedY = Math.random() * -0.6 - 0.2; // Bay ngược từ dưới lên trên
-                this.rotation = Math.random() * Math.PI * 2; // Góc xoay ban đầu
-                this.rotationSpeed = (Math.random() - 0.5) * 0.03; // Tốc độ xoay
-                this.opacity = Math.random() * 0.5 + 0.1; // Độ sáng tối ngẫu nhiên
+                this.size = Math.random() * 8 + 4; // Kích thước sao
+                this.speedX = (Math.random() - 0.5) * 0.4; // Trôi ngang
+                this.speedY = Math.random() * -0.6 - 0.2; // Bay lên
+                this.rotation = Math.random() * Math.PI * 2; 
+                this.rotationSpeed = (Math.random() - 0.5) * 0.03; 
+                this.opacity = Math.random() * 0.5 + 0.1; 
             }
             update() {
                 this.y += this.speedY;
                 this.x += this.speedX;
                 this.rotation += this.rotationSpeed;
                 
-                // Nếu ngôi sao bay khuất lên mép trên, cho nó xuất hiện lại ở dưới cùng
                 if (this.y < -20) { 
                     this.y = canvas.height + 20; 
                     this.x = Math.random() * canvas.width; 
@@ -90,11 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Tạo 45 ngôi sao vàng lơ lửng
         for (let i = 0; i < 45; i++) particles.push(new Star());
 
         function animate() {
-            // Xóa canvas mỗi frame
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animate);
@@ -128,7 +138,7 @@ function initAppFeatures() {
     const reveals = document.querySelectorAll('.reveal');
     function reveal() {
         let windowHeight = window.innerHeight;
-        let elementVisible = 80; // Nhạy hơn
+        let elementVisible = 80; 
         reveals.forEach(rev => {
             let elementTop = rev.getBoundingClientRect().top;
             if (elementTop < windowHeight - elementVisible) {
@@ -137,7 +147,7 @@ function initAppFeatures() {
         });
     }
     window.addEventListener('scroll', reveal);
-    reveal(); // Chạy ngay khi tải
+    reveal(); 
 
     // 6. Highlight Active Nav
     const currentPage = window.location.pathname.split("/").pop() || 'index.html';
@@ -154,7 +164,7 @@ function initAppFeatures() {
     lightbox.innerHTML = `<span id="lightbox-close">&times;</span><img src="" alt="Zoomed Image">`;
     document.body.appendChild(lightbox);
     
-    const images = document.querySelectorAll('.gallery-img, .milestone-img'); // Hỗ trợ cả trang cột mốc
+    const images = document.querySelectorAll('.gallery-img, .milestone-img'); 
     const lightboxImg = lightbox.querySelector('img');
     
     images.forEach(img => {
@@ -168,18 +178,16 @@ function initAppFeatures() {
         if(e.target !== lightboxImg) lightbox.classList.remove('active');
     });
 
-    // 8. Search Functionality (Lọc các thẻ và đoạn văn)
+    // 8. Search Functionality
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             
-            // Lọc trong các đoạn văn của .content-section
             document.querySelectorAll('.content-section p').forEach(p => {
                 p.style.display = p.textContent.toLowerCase().includes(term) ? 'block' : 'none';
             });
 
-            // Lọc các thẻ cột mốc trên trang cotmoc.html
             document.querySelectorAll('.milestone-card').forEach(card => {
                 const text = card.textContent.toLowerCase();
                 card.style.display = text.includes(term) ? 'block' : 'none';
@@ -187,7 +195,7 @@ function initAppFeatures() {
         });
     }
 
-    // 9. Typing Effect (for Index page only)
+    // 9. Typing Effect
     const typingElement = document.getElementById('typing-text');
     if (typingElement) {
         const textArray = ["Bắt đầu từ một người yêu nước...", "Trở thành chiến sĩ cộng sản vĩ đại.", "Người tìm ra con đường cứu nước."];
@@ -211,15 +219,15 @@ function initAppFeatures() {
 
             if (!isDeleting && charIndex === currentText.length) {
                 isDeleting = true;
-                typeSpeed = 2000; // Nghỉ khi gõ xong
+                typeSpeed = 2000; 
             } else if (isDeleting && charIndex === 0) {
                 isDeleting = false;
                 textIndex = (textIndex + 1) % textArray.length;
-                typeSpeed = 500; // Nghỉ trước khi gõ câu mới
+                typeSpeed = 500; 
             }
 
             setTimeout(typeWriter, typeSpeed);
         }
-        setTimeout(typeWriter, 1500); // Khởi động
+        setTimeout(typeWriter, 1500); 
     }
 }
